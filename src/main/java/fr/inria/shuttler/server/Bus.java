@@ -75,13 +75,22 @@ public class Bus {
     }
 
     public Bus(double lat, double lon, String email) {
+        this._lat = lat;
+        this._lon = lon;
+        passengers = new ArrayList<String>();
     }
 
     public void hopOn(double lat, double lon, String email) {
         this._lat = lat;
         this._lon = lon;
+        passengers = new ArrayList<String>();
         if (!passengers.contains(email)) {
             passengers.add(email);
         }
+    }
+    
+    public void updateLocation(double lat, double lon){
+        setLat(lat);
+        setLon(lon);
     }
 }
