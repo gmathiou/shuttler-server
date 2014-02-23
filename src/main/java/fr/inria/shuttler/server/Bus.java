@@ -74,9 +74,14 @@ public class Bus {
         this.passengers = passengers;
     }
 
-    public Bus(double lat, double lon, String email) {
+    public Bus(double lat, double lon, int line) {
         this._lat = lat;
         this._lon = lon;
+        for (Line registeredLine : DataHandler.getLines()) {
+            if (registeredLine.getID() == line) {
+                this._line = registeredLine;
+            }
+        }
         passengers = new ArrayList<String>();
     }
 
@@ -88,7 +93,7 @@ public class Bus {
             passengers.add(email);
         }
     }
-    
+
     public void updateLocation(double lat, double lon){
         setLat(lat);
         setLon(lon);

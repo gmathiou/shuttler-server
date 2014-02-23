@@ -87,6 +87,7 @@ public class DataHandler {
      * @param aBuses the _buses to set
      */
     public static void setBuses(ArrayList<Bus> aBuses) {
+        initDataHandler();
         _buses = aBuses;
     }
 
@@ -101,6 +102,7 @@ public class DataHandler {
      * @param aPassengerToBusMap the _passengerToBusMap to set
      */
     public static void setPassengerToBusMap(HashMap<String, Bus> aPassengerToBusMap) {
+        initDataHandler();
         _passengerToBusMap = aPassengerToBusMap;
     }
 

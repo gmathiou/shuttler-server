@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
@@ -34,9 +36,9 @@ public class ShuttlerResource {
         }
     }
 
-    protected synchronized void getUserStats() {
+    protected synchronized void newUserRegistration(String email) {
         for (Object listener : _listeners) {
-            ((DBUpdateEventListener) listener).getUserStats();
+            ((DBUpdateEventListener) listener).newUserRegistration(email);
         }
     }
 
@@ -71,25 +73,36 @@ public class ShuttlerResource {
         String email = objMsg.get("email").toString();
         double lat = Double.valueOf(objMsg.get("lat").toString());
         double lon = Double.valueOf(objMsg.get("lon").toString());
-        Bus newBus = new Bus(lat, lon, email);
+        int line = Integer.valueOf(objMsg.get("line").toString());
+
+        if (DataHandler.getPassengerToBusMap().containsKey(email)) {
+            //User is already onboard a bus
+            return Response.serverError().build();
+        }
+
+        //Check if user exists in the profile table in DB
+        this.newUserRegistration(email);
+
+        boolean busFoundFlag = false;
+
+        //Some buses exist. Check if the current passenger is onboard a bus that is alredy there
+        for (int i = 0; i < DataHandler.getBuses().size(); i++) {
+            Bus bus = DataHandler.getBuses().get(i);
+            if (LocationHelpers.distFrom(lat, lon, bus.getLat(), bus.getLon()) < 0.2) {
+                //Bus already registered. Just add a passenger
+                bus.getPassengers().add(email);
+                DataHandler.getPassengerToBusMap().put(email, DataHandler.getBuses().get(i));
+                busFoundFlag = true;
+                break;
+            }
+        }
 
         //Check if there are any buses registered
-        if (DataHandler.getBuses().size() < 1) {
+        if (DataHandler.getBuses().size() < 1 || busFoundFlag == false) {
+            Bus newBus = new Bus(lat, lon, line);
             DataHandler.getBuses().add(newBus);
+            newBus.getPassengers().add(email);
             DataHandler.getPassengerToBusMap().put(email, newBus);
-        } else {
-            //Find if any bus near ==> Already registered bus
-            for (Bus bus : DataHandler.getBuses()) {
-                if (LocationHelpers.distFrom(lat, lon, bus.getLat(), bus.getLon()) < 100) {
-                    //Bus already registered. Just add a passenger
-                    bus.getPassengers().add(email);
-                    DataHandler.getPassengerToBusMap().put(email, bus);
-                } else {
-                    //Bus is not registered. Add it
-                    DataHandler.getBuses().add(newBus);
-                    DataHandler.getPassengerToBusMap().put(email, newBus);
-                }
-            }
         }
         return Response.ok().build();
     }
@@ -97,7 +110,7 @@ public class ShuttlerResource {
     @GET
     @Path("getStops")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getStations(String msg) {
+    public Response getStations() {
         checkDB();
         String reply = DataHandler.getStopsJSON().toJSONString();
         return Response.ok().entity(reply).build();
@@ -121,32 +134,67 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("getProfileInfo")
-    @Consumes(MediaType.TEXT_HTML)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getProfileInfo() {
+    @Path("getProfile/{email}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getProfileInfo(@PathParam("email") String email) {
         checkDB();
-
-        return "Got it!";
+        JSONObject profile = DataHandler.getDbHandler().getUserStats(email);
+        String reply = profile.toJSONString();
+        return Response.ok().entity(reply).build();
     }
 
     @GET
-    @Path("getBusesForLine")
-    @Consumes(MediaType.TEXT_HTML)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getBusesForLine() {
+    @Path("getBusesForLine/{line}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBusesForLine(@PathParam("line") String lineString) {
         checkDB();
+        JSONArray buses = new JSONArray();
+        try {
+            int line = Integer.valueOf(lineString);
+            if (DataHandler.getBuses().size() < 1) {
+                return Response.ok().entity("{}").build();
+            }
 
-        return "Got it!";
+            for (Bus b : DataHandler.getBuses()) {
+                if (b.getLine().getID() == line) {
+                    JSONObject busObject = new JSONObject();
+                    busObject.put("latitude", b.getLat());
+                    busObject.put("longitude", b.getLon());
+                    busObject.put("lineid", b.getLine().getID());
+                    busObject.put("linename", b.getLine().getName());
+                    buses.add(busObject);
+                }
+            }
+        } catch (Exception ex) {
+            return Response.serverError().build();
+        }
+        JSONObject reply = new JSONObject();
+        reply.put("buses", buses);
+        return Response.ok().entity(reply.toJSONString()).build();
     }
 
-    @GET
+    @POST
     @Path("userHopOff")
-    @Consumes(MediaType.TEXT_HTML)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String userHopOff() {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response userHopOff(String msg) {
         checkDB();
+        JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
+        String email = objMsg.get("email").toString();
 
-        return "Got it!";
+        if (DataHandler.getPassengerToBusMap().containsKey(email)) {
+            Bus bus = DataHandler.getPassengerToBusMap().get(email);
+
+            if (bus.getPassengers().contains(email)) {
+                if (bus.getPassengers().size() > 1) {
+                    //There are more passengers onboard
+                    bus.getPassengers().remove(email);
+                } else {
+                    //This passenger was the only one in the bus
+                    DataHandler.getBuses().remove(bus);
+                }
+            }
+            DataHandler.getPassengerToBusMap().remove(email);
+        }
+        return Response.ok().build();
     }
 }
