@@ -20,42 +20,36 @@ public class ShuttlerResource {
     /**
      * Database communication methods
      */
-    protected List _listeners = new ArrayList();
+    protected List _DB_EventListeners = new ArrayList();
 
     protected synchronized void addEventListener(DBUpdateEventListener listener) {
-        _listeners.add(listener);
+        _DB_EventListeners.add(listener);
     }
 
     protected synchronized void removeEventListener(DBUpdateEventListener listener) {
-        _listeners.remove(listener);
+        _DB_EventListeners.remove(listener);
     }
 
-    protected synchronized void updateRouteSessionViews() {
-        for (Object listener : _listeners) {
-            ((DBUpdateEventListener) listener).updateRouteSessionViews();
+    protected synchronized void updateRouteSessionViews(String email, int views) {
+        for (Object listener : _DB_EventListeners) {
+            ((DBUpdateEventListener) listener).updateRouteSessionViews(email, views);
         }
     }
 
     protected synchronized void newUserRegistration(String email) {
-        for (Object listener : _listeners) {
+        for (Object listener : _DB_EventListeners) {
             ((DBUpdateEventListener) listener).newUserRegistration(email);
         }
     }
 
-    protected synchronized void updateUserRankings() {
-        for (Object listener : _listeners) {
-            ((DBUpdateEventListener) listener).updateUserRankings();
-        }
-    }
-
     /**
-     * Use to initialize the database handler
+     * Used to initialize the database handler and the event listeners
      */
-    private void checkDB() {
+    private void dataInit() {
         if (DataHandler.getDbHandler() == null) {
             DataHandler.setDbHandler(new DBHandler());
         }
-        if (!_listeners.contains(DataHandler.getDbHandler())) {
+        if (!_DB_EventListeners.contains(DataHandler.getDbHandler())) {
             this.addEventListener(DataHandler.getDbHandler());
         }
     }
@@ -68,7 +62,7 @@ public class ShuttlerResource {
     @Path("userHopOn")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response userHopOn(String msg) {
-        checkDB();
+        dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
         double lat = Double.valueOf(objMsg.get("lat").toString());
@@ -111,7 +105,7 @@ public class ShuttlerResource {
     @Path("getStops")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStations() {
-        checkDB();
+        dataInit();
         String reply = DataHandler.getStopsJSON().toJSONString();
         return Response.ok().entity(reply).build();
     }
@@ -120,7 +114,7 @@ public class ShuttlerResource {
     @Path("updateLocation")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateLocation(String msg) {
-        checkDB();
+        dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
         double lat = Double.valueOf(objMsg.get("lat").toString());
@@ -137,26 +131,35 @@ public class ShuttlerResource {
     @Path("getProfile/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProfileInfo(@PathParam("email") String email) {
-        checkDB();
+        dataInit();
         JSONObject profile = DataHandler.getDbHandler().getUserStats(email);
         String reply = profile.toJSONString();
         return Response.ok().entity(reply).build();
     }
 
     @GET
-    @Path("getBusesForLine/{line}")
+    @Path("getBusesForLine/{email}/{line}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBusesForLine(@PathParam("line") String lineString) {
-        checkDB();
+    public Response getBusesForLine(@PathParam("email") String email, @PathParam("line") String lineString) {
+        dataInit();
+        int line;
+
         JSONArray buses = new JSONArray();
         try {
-            int line = Integer.valueOf(lineString);
+            line = Integer.valueOf(lineString);
             if (DataHandler.getBuses().size() < 1) {
                 return Response.ok().entity("{}").build();
             }
 
             for (Bus b : DataHandler.getBuses()) {
                 if (b.getLine().getID() == line) {
+
+                    // Update the views Map
+                    for (String passenger : b.getPassengers()) {
+                        DataHandler.updateViews(passenger, email);
+                    }
+
+                    //Start creating the response
                     JSONObject busObject = new JSONObject();
                     busObject.put("latitude", b.getLat());
                     busObject.put("longitude", b.getLon());
@@ -166,10 +169,12 @@ public class ShuttlerResource {
                 }
             }
         } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
             return Response.serverError().build();
         }
         JSONObject reply = new JSONObject();
         reply.put("buses", buses);
+
         return Response.ok().entity(reply.toJSONString()).build();
     }
 
@@ -177,12 +182,19 @@ public class ShuttlerResource {
     @Path("userHopOff")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response userHopOff(String msg) {
-        checkDB();
+        dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
 
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             Bus bus = DataHandler.getPassengerToBusMap().get(email);
+
+            //Remove current passenger from the views map
+            if (DataHandler.getPassengerViewsMap().containsKey(email)) {
+                int totalViews = DataHandler.getPassengerViewsMap().get(email).size();
+                updateRouteSessionViews(email, totalViews);
+                DataHandler.getPassengerViewsMap().remove(email);
+            }
 
             if (bus.getPassengers().contains(email)) {
                 if (bus.getPassengers().size() > 1) {

@@ -2,6 +2,8 @@ package fr.inria.shuttler.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -12,6 +14,7 @@ public class DataHandler {
     private static ArrayList<Line> _lines;
     private static ArrayList<Bus> _buses;
     private static HashMap<String, Bus> _passengerToBusMap;
+    private static HashMap<String, Set<String>> _passengerViewsMap;
 
     public static void initDataHandler() {
         //Check if something is initialized. If e.g. stops is initialized everything will be
@@ -22,6 +25,7 @@ public class DataHandler {
         _lines = new ArrayList<Line>();
         _buses = new ArrayList<Bus>();
         _passengerToBusMap = new HashMap<String, Bus>();
+        setPassengerViewsMap(new HashMap<String, Set<String>>());
     }
 
     /**
@@ -118,5 +122,35 @@ public class DataHandler {
      */
     public static void setDbHandler(DBHandler dbHandler) {
         _dbHandler = dbHandler;
+    }
+
+    /**
+     *
+     * @param passengerEmail The email of the passenger to increase views
+     * @param requestersEmail The email of the requester (used to be sure we
+     * count each person once)
+     */
+    public static void updateViews(String passengerEmail, String requestersEmail) {
+        if (getPassengerViewsMap().containsKey(passengerEmail)) {
+            getPassengerViewsMap().get(passengerEmail).add(requestersEmail);
+        } else {
+            Set<String> viewerEmails = new HashSet<String>();
+            viewerEmails.add(requestersEmail);
+            getPassengerViewsMap().put(passengerEmail, viewerEmails);
+        }
+    }
+
+    /**
+     * @return the _passengerViewsMap
+     */
+    public static HashMap<String, Set<String>> getPassengerViewsMap() {
+        return _passengerViewsMap;
+    }
+
+    /**
+     * @param aPassengerViewsMap the _passengerViewsMap to set
+     */
+    public static void setPassengerViewsMap(HashMap<String, Set<String>> aPassengerViewsMap) {
+        _passengerViewsMap = aPassengerViewsMap;
     }
 }

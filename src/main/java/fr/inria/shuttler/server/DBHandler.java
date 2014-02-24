@@ -14,6 +14,7 @@ import org.json.simple.JSONObject;
  * @author mathioud
  */
 public class DBHandler implements DBUpdateEventListener {
+
     private Connection DBconnection = null;
 
     public DBHandler() {
@@ -57,7 +58,7 @@ public class DBHandler implements DBUpdateEventListener {
         try {
             PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `stops` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
-            while(results.next()){
+            while (results.next()) {
                 int ID = results.getInt("id");
                 String shortName = results.getString("shortname");
                 String name = results.getString("name");
@@ -71,7 +72,7 @@ public class DBHandler implements DBUpdateEventListener {
         }
     }
 
-        private void loadLines() {
+    private void loadLines() {
         if (DBconnection == null) {
             return;
         }
@@ -79,7 +80,7 @@ public class DBHandler implements DBUpdateEventListener {
         try {
             PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `lines` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
-            while(results.next()){
+            while (results.next()) {
                 int ID = results.getInt("id");
                 String name = results.getString("name");
                 String stopSequence = results.getString("stopID_sequence");
@@ -92,8 +93,24 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     @Override
-    public void updateRouteSessionViews() {
-        System.out.println("Listened to event");
+    public void updateRouteSessionViews(String email, int views) {
+        if (DBconnection == null) {
+            return;
+        }
+
+        try {
+            PreparedStatement selectStatement = DBconnection.prepareStatement("SELECT `views` FROM `profiles` WHERE `email` = '" + email + "'");
+            ResultSet resultSet = selectStatement.executeQuery();
+            int currentViews = 0;
+            while (resultSet.next()) {
+                currentViews = resultSet.getInt("views");
+            }
+            int updatedViews = currentViews + views;
+            PreparedStatement updateStatement = DBconnection.prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + " WHERE `email` = '" + email + "'");
+            updateStatement.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public JSONObject getUserStats(String email) {
@@ -103,22 +120,21 @@ public class DBHandler implements DBUpdateEventListener {
 
         JSONObject reply = new JSONObject();
         try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE 1 ORDER BY `views` DESC");
             ResultSet results = preparedStatement.executeQuery();
             while (results.next()) {
-                reply.put("email", results.getString("email"));
-                reply.put("views", results.getInt("views"));
-                reply.put("kilometers", results.getInt("kilometers"));
+                if (results.getString("email").equals(email)) {
+                    reply.put("email", results.getString("email"));
+                    reply.put("views", results.getInt("views"));
+                    reply.put("kilometers", results.getInt("kilometers"));
+                    reply.put("rank", results.getRow());
+                    return reply;
+                }
             }
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return reply;
-    }
-
-    @Override
-    public void updateUserRankings() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
