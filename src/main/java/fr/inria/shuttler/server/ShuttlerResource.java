@@ -30,9 +30,9 @@ public class ShuttlerResource {
         _DB_EventListeners.remove(listener);
     }
 
-    protected synchronized void updateRouteSessionViews(String email, int views) {
+    protected synchronized void updateRouteSessionViews(String email, int views, double kilometers) {
         for (Object listener : _DB_EventListeners) {
-            ((DBUpdateEventListener) listener).updateRouteSessionViews(email, views);
+            ((DBUpdateEventListener) listener).updateRouteSessionViews(email, views, kilometers);
         }
     }
 
@@ -119,8 +119,9 @@ public class ShuttlerResource {
         String email = objMsg.get("email").toString();
         double lat = Double.valueOf(objMsg.get("lat").toString());
         double lon = Double.valueOf(objMsg.get("lon").toString());
+        int lastSeenStopID = Integer.valueOf(objMsg.get("lastSeenStopID").toString());
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
-            DataHandler.getPassengerToBusMap().get(email).updateLocation(lat, lon);
+            DataHandler.getPassengerToBusMap().get(email).updateLocation(lat, lon, lastSeenStopID);
             return Response.ok().build();
         } else {
             return Response.notModified().build();
@@ -165,6 +166,7 @@ public class ShuttlerResource {
                     busObject.put("longitude", b.getLon());
                     busObject.put("lineid", b.getLine().getID());
                     busObject.put("linename", b.getLine().getName());
+                    busObject.put("lastSeenStopID", b.getLastSeenStopID());
                     buses.add(busObject);
                 }
             }
@@ -185,6 +187,7 @@ public class ShuttlerResource {
         dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
+        double distanceTravelled = Double.valueOf(objMsg.get("kilometers").toString());
 
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             Bus bus = DataHandler.getPassengerToBusMap().get(email);
@@ -192,7 +195,7 @@ public class ShuttlerResource {
             //Remove current passenger from the views map
             if (DataHandler.getPassengerViewsMap().containsKey(email)) {
                 int totalViews = DataHandler.getPassengerViewsMap().get(email).size();
-                updateRouteSessionViews(email, totalViews);
+                updateRouteSessionViews(email, totalViews, distanceTravelled);
                 DataHandler.getPassengerViewsMap().remove(email);
             }
 

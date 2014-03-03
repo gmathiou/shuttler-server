@@ -93,20 +93,23 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     @Override
-    public void updateRouteSessionViews(String email, int views) {
+    public void updateRouteSessionViews(String email, int views, double kilometers) {
         if (DBconnection == null) {
             return;
         }
 
         try {
-            PreparedStatement selectStatement = DBconnection.prepareStatement("SELECT `views` FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement selectStatement = DBconnection.prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = '" + email + "'");
             ResultSet resultSet = selectStatement.executeQuery();
             int currentViews = 0;
+            double currentKilometers = 0.0;
             while (resultSet.next()) {
                 currentViews = resultSet.getInt("views");
+                currentKilometers = resultSet.getDouble("kilometers");
             }
             int updatedViews = currentViews + views;
-            PreparedStatement updateStatement = DBconnection.prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + " WHERE `email` = '" + email + "'");
+            double updatedKilometers = currentKilometers + kilometers;
+            PreparedStatement updateStatement = DBconnection.prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + ",`kilometers`= " + updatedKilometers + " WHERE `email` = '" + email + "'");
             updateStatement.execute();
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);

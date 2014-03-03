@@ -17,6 +17,7 @@ public class Bus {
     private double _lat;
     private double _lon;
     private ArrayList<String> passengers;
+    private int _lastSeenStopID;
 
     /**
      * @return the _line
@@ -94,8 +95,23 @@ public class Bus {
         }
     }
 
-    public void updateLocation(double lat, double lon){
+    public void updateLocation(double lat, double lon, int lastSeenStopID) {
         setLat(lat);
         setLon(lon);
+        setLastSeenStopID(lastSeenStopID);
+    }
+
+    /**
+     * @return the _lastSeenStopID
+     */
+    public int getLastSeenStopID() {
+        return _lastSeenStopID;
+    }
+
+    /**
+     * @param _lastSeenStopID the _lastSeenStopID to set
+     */
+    public void setLastSeenStopID(int _lastSeenStopID) {
+        this._lastSeenStopID = _lastSeenStopID;
     }
 }

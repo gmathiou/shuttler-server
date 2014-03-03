@@ -47,8 +47,8 @@ public class DataHandler {
             stopJSONObject.put("id", stop.getID());
             stopJSONObject.put("name", stop.getName());
             stopJSONObject.put("shortname", stop.getShortName());
-            stopJSONObject.put("lat", stop.getLat());
-            stopJSONObject.put("lon", stop.getLon());
+            stopJSONObject.put("latitude", stop.getLat());
+            stopJSONObject.put("longitude", stop.getLon());
             stopsJSON.add(stopJSONObject);
         }
         JSONObject reply = new JSONObject();

@@ -11,6 +11,6 @@ package fr.inria.shuttler.server;
  * @author mathioud
  */
 public interface DBUpdateEventListener {
-    void updateRouteSessionViews(String email, int views);
+    void updateRouteSessionViews(String email, int views, double kilometers);
     void newUserRegistration(String email);
 }
