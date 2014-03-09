@@ -110,6 +110,15 @@ public class ShuttlerResource {
         return Response.ok().entity(reply).build();
     }
 
+    @GET
+    @Path("getLines")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getLines() {
+        dataInit();
+        String reply = DataHandler.getLinesJSON().toJSONString();
+        return Response.ok().entity(reply).build();
+    }
+
     @POST
     @Path("updateLocation")
     @Consumes(MediaType.APPLICATION_JSON)

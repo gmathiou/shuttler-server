@@ -57,6 +57,24 @@ public class DataHandler {
     }
 
     /**
+     * @return the _lines
+     */
+    public static JSONObject getLinesJSON() {
+        initDataHandler();
+        JSONArray linesJSON = new JSONArray();
+        for (Line line : _lines) {
+            JSONObject lineJSONObject = new JSONObject();
+            lineJSONObject.put("id", line.getID());
+            lineJSONObject.put("name", line.getName());
+            lineJSONObject.put("stops_sequence", line.getStops());
+            linesJSON.add(lineJSONObject);
+        }
+        JSONObject reply = new JSONObject();
+        reply.put("lines", linesJSON);
+        return reply;
+    }
+
+    /**
      * @param aStops the _stops to set
      */
     public static void setStops(ArrayList<Stop> aStops) {

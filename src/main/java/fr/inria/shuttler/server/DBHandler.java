@@ -40,14 +40,6 @@ public class DBHandler implements DBUpdateEventListener {
         if (DBconnection == null) {
             return;
         }
-
-        try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("insert into  stops values (?)");
-            preparedStatement.setInt(1, 1);
-            preparedStatement.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     private void loadStops() {
@@ -123,7 +115,7 @@ public class DBHandler implements DBUpdateEventListener {
 
         JSONObject reply = new JSONObject();
         try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE 1 ORDER BY `views` DESC");
+            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "' ORDER BY `views` DESC");
             ResultSet results = preparedStatement.executeQuery();
             while (results.next()) {
                 if (results.getString("email").equals(email)) {
