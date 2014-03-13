@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package fr.inria.shuttler.server;
+package com.gmathiou.shuttler.server;
 
 /**
  *

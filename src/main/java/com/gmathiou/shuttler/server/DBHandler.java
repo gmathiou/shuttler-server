@@ -1,4 +1,4 @@
-package fr.inria.shuttler.server;
+package com.gmathiou.shuttler.server;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

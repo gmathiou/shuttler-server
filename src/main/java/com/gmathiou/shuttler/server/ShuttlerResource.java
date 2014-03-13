@@ -1,4 +1,4 @@
-package fr.inria.shuttler.server;
+package com.gmathiou.shuttler.server;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
