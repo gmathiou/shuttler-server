@@ -15,13 +15,15 @@ public class Stop {
     private String _name;
     private double _lat;
     private double _lon;
+    private int _line;
 
-    public Stop(int _ID, String _shortName, String _name, double _lat, double _lon) {
+    public Stop(int _ID, String _shortName, String _name, double _lat, double _lon, int lineId) {
         this._ID = _ID;
         this._shortName = _shortName;
         this._name = _name;
         this._lat = _lat;
         this._lon = _lon;
+        this._line = lineId;
     }
 
     /**
@@ -92,5 +94,19 @@ public class Stop {
      */
     public void setName(String _name) {
         this._name = _name;
+    }
+
+    /**
+     * @return the _line
+     */
+    public int getLine() {
+        return _line;
+    }
+
+    /**
+     * @param _lineId the _line to set
+     */
+    public void setLine(int _lineId) {
+        this._line = _lineId;
     }
 }

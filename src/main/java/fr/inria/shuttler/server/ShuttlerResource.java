@@ -1,7 +1,11 @@
 package fr.inria.shuttler.server;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.PreDestroy;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -59,7 +63,7 @@ public class ShuttlerResource {
      * @return
      */
     @POST
-    @Path("userHopOn")
+    @Path("hopon")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response userHopOn(String msg) {
         dataInit();
@@ -102,7 +106,7 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("getStops")
+    @Path("stops")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStations() {
         dataInit();
@@ -111,7 +115,7 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("getLines")
+    @Path("lines")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLines() {
         dataInit();
@@ -120,7 +124,7 @@ public class ShuttlerResource {
     }
 
     @POST
-    @Path("updateLocation")
+    @Path("updatelocation")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateLocation(String msg) {
         dataInit();
@@ -138,7 +142,7 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("getProfile/{email}")
+    @Path("profile/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProfileInfo(@PathParam("email") String email) {
         dataInit();
@@ -148,7 +152,7 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("getBusesForLine/{email}/{line}")
+    @Path("busesforline/{email}/{line}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBusesForLine(@PathParam("email") String email, @PathParam("line") String lineString) {
         dataInit();
@@ -171,10 +175,9 @@ public class ShuttlerResource {
 
                     //Start creating the response
                     JSONObject busObject = new JSONObject();
+                    busObject.put("lineid", b.getLine().getID());
                     busObject.put("latitude", b.getLat());
                     busObject.put("longitude", b.getLon());
-                    busObject.put("lineid", b.getLine().getID());
-                    busObject.put("linename", b.getLine().getName());
                     busObject.put("lastSeenStopID", b.getLastSeenStopID());
                     buses.add(busObject);
                 }
@@ -190,7 +193,7 @@ public class ShuttlerResource {
     }
 
     @POST
-    @Path("userHopOff")
+    @Path("hopoff")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response userHopOff(String msg) {
         dataInit();
@@ -220,5 +223,15 @@ public class ShuttlerResource {
             DataHandler.getPassengerToBusMap().remove(email);
         }
         return Response.ok().build();
+    }
+
+    @PreDestroy
+    public void predestroy() {
+        System.out.println("Destroying server app");
+        try {
+            DataHandler.getDbHandler().getDBconnection().close();
+        } catch (SQLException ex) {
+            Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

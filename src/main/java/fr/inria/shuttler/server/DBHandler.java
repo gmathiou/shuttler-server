@@ -19,11 +19,11 @@ public class DBHandler implements DBUpdateEventListener {
 
     public DBHandler() {
         initializeDB();
-        loadStops();
         loadLines();
+        loadStops();
     }
 
-    private void initializeDB() {
+    public Connection initializeDB() {
         System.out.println("-------- MySQL JDBC Connection ------------");
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -32,23 +32,20 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            DBconnection = DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB", "root", "root");
+            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
         } catch (SQLException e) {
             System.err.println("Connection to DB Failed!");
         }
-
-        if (DBconnection == null) {
-            return;
-        }
+        return getDBconnection();
     }
 
     private void loadStops() {
-        if (DBconnection == null) {
+        if (getDBconnection() == null) {
             return;
         }
 
         try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `stops` WHERE 1");
+            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `stops` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
             while (results.next()) {
                 int ID = results.getInt("id");
@@ -56,7 +53,8 @@ public class DBHandler implements DBUpdateEventListener {
                 String name = results.getString("name");
                 double lat = results.getDouble("latitude");
                 double lon = results.getDouble("longitude");
-                Stop newStop = new Stop(ID, shortName, name, lat, lon);
+                int lineId = results.getInt("line");
+                Stop newStop = new Stop(ID, shortName, name, lat, lon, lineId);
                 DataHandler.getStops().add(newStop);
             }
         } catch (SQLException ex) {
@@ -65,12 +63,12 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     private void loadLines() {
-        if (DBconnection == null) {
+        if (getDBconnection() == null) {
             return;
         }
 
         try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `lines` WHERE 1");
+            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `lines` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
             while (results.next()) {
                 int ID = results.getInt("id");
@@ -86,12 +84,12 @@ public class DBHandler implements DBUpdateEventListener {
 
     @Override
     public void updateRouteSessionViews(String email, int views, double kilometers) {
-        if (DBconnection == null) {
+        if (getDBconnection() == null) {
             return;
         }
 
         try {
-            PreparedStatement selectStatement = DBconnection.prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = '" + email + "'");
             ResultSet resultSet = selectStatement.executeQuery();
             int currentViews = 0;
             double currentKilometers = 0.0;
@@ -101,7 +99,7 @@ public class DBHandler implements DBUpdateEventListener {
             }
             int updatedViews = currentViews + views;
             double updatedKilometers = currentKilometers + kilometers;
-            PreparedStatement updateStatement = DBconnection.prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + ",`kilometers`= " + updatedKilometers + " WHERE `email` = '" + email + "'");
+            PreparedStatement updateStatement = getDBconnection().prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + ",`kilometers`= " + updatedKilometers + " WHERE `email` = '" + email + "'");
             updateStatement.execute();
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -109,13 +107,13 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     public JSONObject getUserStats(String email) {
-        if (DBconnection == null) {
+        if (getDBconnection() == null) {
             return null;
         }
 
         JSONObject reply = new JSONObject();
         try {
-            PreparedStatement preparedStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "' ORDER BY `views` DESC");
+            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "' ORDER BY `views` DESC");
             ResultSet results = preparedStatement.executeQuery();
             while (results.next()) {
                 if (results.getString("email").equals(email)) {
@@ -134,19 +132,33 @@ public class DBHandler implements DBUpdateEventListener {
 
     @Override
     public void newUserRegistration(String email) {
-        if (DBconnection == null) {
+        if (getDBconnection() == null) {
             return;
         }
 
         try {
-            PreparedStatement selectStatement = DBconnection.prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "'");
             ResultSet resultSet = selectStatement.executeQuery();
             if (resultSet.first() == false) {
-                PreparedStatement insertStatement = DBconnection.prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES ('" + email + "',0,0)");
+                PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES ('" + email + "',0,0)");
                 insertStatement.execute();
             }
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    /**
+     * @return the DBconnection
+     */
+    public Connection getDBconnection() {
+        return DBconnection;
+    }
+
+    /**
+     * @param DBconnection the DBconnection to set
+     */
+    public void setDBconnection(Connection DBconnection) {
+        this.DBconnection = DBconnection;
     }
 }

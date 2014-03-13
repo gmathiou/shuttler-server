@@ -49,6 +49,7 @@ public class DataHandler {
             stopJSONObject.put("shortname", stop.getShortName());
             stopJSONObject.put("latitude", stop.getLat());
             stopJSONObject.put("longitude", stop.getLon());
+            stopJSONObject.put("lineId", stop.getLine());
             stopsJSON.add(stopJSONObject);
         }
         JSONObject reply = new JSONObject();
