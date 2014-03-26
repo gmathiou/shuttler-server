@@ -8,3 +8,7 @@ How to use
 Configure database URL, build with maven, deploy war on a Tomcat server.
 
 Database URL to be set at DBHandler.java
+
+API
+---
+[http://gmathiou.github.io/shuttler-server](http://gmathiou.github.io/shuttler-server)
