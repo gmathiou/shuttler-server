@@ -32,7 +32,7 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
+            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", ""));
         } catch (SQLException e) {
             System.err.println("Connection to DB Failed!");
         }

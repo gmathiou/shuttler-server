@@ -75,14 +75,10 @@ public class Bus {
         this.passengers = passengers;
     }
 
-    public Bus(double lat, double lon, int line) {
+    public Bus(double lat, double lon, Line line) {
         this._lat = lat;
         this._lon = lon;
-        for (Line registeredLine : DataHandler.getLines()) {
-            if (registeredLine.getID() == line) {
-                this._line = registeredLine;
-            }
-        }
+        this._line = line;
         passengers = new ArrayList<String>();
     }
 

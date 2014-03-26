@@ -20,17 +20,17 @@ Returns all registered stops.
                         "id":1,
                         "name":"Place de l'Etoile",
                         "shortname":"etoile",
-                        "longitude":2.2949,
                         "latitude":48.873934,
-                        "lineId":1
+                        "longitude":2.2949,
+                        "lineid":1
                     },
                     {
                         "id":2,
                         "name":"Porte Dauphine",
                         "shortname":"dauphine",
-                        "longitude":2.274401,
                         "latitude":48.87028,
-                        "lineId":1
+                        "longitude":2.274401,
+                        "lineid":1
                     }
                 ]
             }
@@ -68,10 +68,10 @@ Called by user to indicate the boarding on the bus.
     + Body
 
             {
-                "email":"mathioudakis.giorgos@gmail.com",
-                "lat":"48.885944",
-                "lon":"2.2949",
-                "line":"1"
+                "email":"myaccount@gmail.com",
+                "latitude":"48.885944",
+                "longitude":"2.2949",
+                "lineid":"1"
             }
 
 + Response 200
@@ -85,10 +85,10 @@ Updates the location of the user on the server.
     + Body
 
             {
-                "email":"mathioudakis.giorgos@gmail.com",
-                "lat":"48.885944",
-                "lon":"2.2949",
-                "lastSeenStopID":"2"
+                "email":"myaccount@gmail.com",
+                "latitude":"48.885944",
+                "longitude":"2.2949",
+                "lastseenstopid":"2"
             }
 
 + Response 200
@@ -101,7 +101,7 @@ Called by user to indicate the disembarkment from the bus.
     + Body
 
             {
-                "email":"mathioudakis.giorgos@gmail.com",
+                "email":"myaccount@gmail.com",
                 "kilometers":16.89
             }
 
@@ -120,9 +120,9 @@ Returns buses of the line specified.
                 "buses":[
                     {
                         "lineid":1,
-                        "longitude":2.236996,
                         "latitude":48.899377,
-                        "lastSeenStopID":1
+                        "longitude":2.236996,
+                        "lastseenstopid":1
                     }
                 ]
             }
@@ -138,7 +138,7 @@ Retrieves user stats.
 
             {
                 "rank":1,
-                "email":"mathioudakis.giorgos@gmail.com",
+                "email":"myaccount@gmail.com",
                 "views":23,
                 "kilometers":18
             }

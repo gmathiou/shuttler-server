@@ -58,10 +58,6 @@ public class ShuttlerResource {
         }
     }
 
-    /**
-     *
-     * @return
-     */
     @POST
     @Path("hopon")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -69,9 +65,9 @@ public class ShuttlerResource {
         dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
-        double lat = Double.valueOf(objMsg.get("lat").toString());
-        double lon = Double.valueOf(objMsg.get("lon").toString());
-        int line = Integer.valueOf(objMsg.get("line").toString());
+        double lat = Double.valueOf(objMsg.get("latitude").toString());
+        double lon = Double.valueOf(objMsg.get("longitude").toString());
+        int line = Integer.valueOf(objMsg.get("lineid").toString());
 
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             //User is already onboard a bus
@@ -95,9 +91,21 @@ public class ShuttlerResource {
             }
         }
 
+        Line newLine = null;
+
+        for (Line registeredLine : DataHandler.getLines()) {
+            if (registeredLine.getID() == line) {
+                newLine = registeredLine;
+            }
+        }
+
+        if (newLine == null) {
+            return Response.serverError().build();
+        }
+
         //Check if there are any buses registered
         if (DataHandler.getBuses().size() < 1 || busFoundFlag == false) {
-            Bus newBus = new Bus(lat, lon, line);
+            Bus newBus = new Bus(lat, lon, newLine);
             DataHandler.getBuses().add(newBus);
             newBus.getPassengers().add(email);
             DataHandler.getPassengerToBusMap().put(email, newBus);
@@ -130,9 +138,9 @@ public class ShuttlerResource {
         dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
-        double lat = Double.valueOf(objMsg.get("lat").toString());
-        double lon = Double.valueOf(objMsg.get("lon").toString());
-        int lastSeenStopID = Integer.valueOf(objMsg.get("lastSeenStopID").toString());
+        double lat = Double.valueOf(objMsg.get("latitude").toString());
+        double lon = Double.valueOf(objMsg.get("longitude").toString());
+        int lastSeenStopID = Integer.valueOf(objMsg.get("lastseenstopid").toString());
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             DataHandler.getPassengerToBusMap().get(email).updateLocation(lat, lon, lastSeenStopID);
             return Response.ok().build();
@@ -152,37 +160,35 @@ public class ShuttlerResource {
     }
 
     @GET
-    @Path("busesforline/{email}/{line}")
+    @Path("busesforline/{email}/{lineid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBusesForLine(@PathParam("email") String email, @PathParam("line") String lineString) {
+    public Response getBusesForLine(@PathParam("email") String email, @PathParam("lineid") String lineString) {
         dataInit();
         int line;
 
         JSONArray buses = new JSONArray();
         try {
             line = Integer.valueOf(lineString);
-            if (DataHandler.getBuses().size() < 1) {
-                return Response.ok().entity("{}").build();
-            }
+            if (DataHandler.getBuses().size() > 0) {
+                for (Bus b : DataHandler.getBuses()) {
+                    if (b.getLine().getID() == line) {
 
-            for (Bus b : DataHandler.getBuses()) {
-                if (b.getLine().getID() == line) {
+                        // Update the views Map
+                        for (String passenger : b.getPassengers()) {
+                            DataHandler.updateViews(passenger, email);
+                        }
 
-                    // Update the views Map
-                    for (String passenger : b.getPassengers()) {
-                        DataHandler.updateViews(passenger, email);
+                        //Start creating the response
+                        JSONObject busObject = new JSONObject();
+                        busObject.put("lineid", b.getLine().getID());
+                        busObject.put("latitude", b.getLat());
+                        busObject.put("longitude", b.getLon());
+                        busObject.put("lastseenstopid", b.getLastSeenStopID());
+                        buses.add(busObject);
                     }
-
-                    //Start creating the response
-                    JSONObject busObject = new JSONObject();
-                    busObject.put("lineid", b.getLine().getID());
-                    busObject.put("latitude", b.getLat());
-                    busObject.put("longitude", b.getLon());
-                    busObject.put("lastSeenStopID", b.getLastSeenStopID());
-                    buses.add(busObject);
                 }
             }
-        } catch (Exception ex) {
+        } catch (NumberFormatException ex) {
             System.out.println("Exception: " + ex.getMessage());
             return Response.serverError().build();
         }
