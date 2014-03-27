@@ -154,9 +154,14 @@ public class ShuttlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProfileInfo(@PathParam("email") String email) {
         dataInit();
+        this.newUserRegistration(email);
         JSONObject profile = DataHandler.getDbHandler().getUserStats(email);
         String reply = profile.toJSONString();
-        return Response.ok().entity(reply).build();
+        if (reply != null) {
+            return Response.ok().entity(reply).build();
+        } else {
+            return Response.serverError().build();
+        }
     }
 
     @GET
@@ -164,6 +169,7 @@ public class ShuttlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBusesForLine(@PathParam("email") String email, @PathParam("lineid") String lineString) {
         dataInit();
+        this.newUserRegistration(email);
         int line;
 
         JSONArray buses = new JSONArray();

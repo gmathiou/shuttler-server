@@ -18,12 +18,12 @@ public class DBHandler implements DBUpdateEventListener {
     private Connection DBconnection = null;
 
     public DBHandler() {
-        initializeDB();
+        DBconnection = initializeDB();
         loadLines();
         loadStops();
     }
 
-    public Connection initializeDB() {
+    private Connection initializeDB() {
         System.out.println("-------- MySQL JDBC Connection ------------");
         try {
             Class.forName("com.mysql.jdbc.Driver");
