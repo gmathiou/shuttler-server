@@ -150,6 +150,9 @@ public class DataHandler {
      * count each person once)
      */
     public static void updateViews(String passengerEmail, String requestersEmail) {
+        if (passengerEmail.equals(requestersEmail)) {
+            return;
+        }
         if (getPassengerViewsMap().containsKey(passengerEmail)) {
             getPassengerViewsMap().get(passengerEmail).add(requestersEmail);
         } else {

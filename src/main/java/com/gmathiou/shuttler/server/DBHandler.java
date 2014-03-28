@@ -115,6 +115,13 @@ public class DBHandler implements DBUpdateEventListener {
         try {
             PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "' ORDER BY `views` DESC");
             ResultSet results = preparedStatement.executeQuery();
+            if (!results.isBeforeFirst()) {
+                reply.put("email", email);
+                reply.put("views", "0");
+                reply.put("kilometers", "0");
+                reply.put("rank", "0");
+                return reply;
+            }
             while (results.next()) {
                 if (results.getString("email").equals(email)) {
                     reply.put("email", results.getString("email"));
@@ -138,8 +145,8 @@ public class DBHandler implements DBUpdateEventListener {
 
         try {
             PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "'");
-            ResultSet resultSet = selectStatement.executeQuery();
-            if (resultSet.first() == false) {
+            ResultSet results = selectStatement.executeQuery();
+            if (!results.next()) {
                 PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES ('" + email + "',0,0)");
                 insertStatement.execute();
             }

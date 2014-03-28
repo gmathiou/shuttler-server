@@ -154,7 +154,6 @@ public class ShuttlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProfileInfo(@PathParam("email") String email) {
         dataInit();
-        this.newUserRegistration(email);
         JSONObject profile = DataHandler.getDbHandler().getUserStats(email);
         String reply = profile.toJSONString();
         if (reply != null) {
@@ -169,7 +168,6 @@ public class ShuttlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBusesForLine(@PathParam("email") String email, @PathParam("lineid") String lineString) {
         dataInit();
-        this.newUserRegistration(email);
         int line;
 
         JSONArray buses = new JSONArray();
