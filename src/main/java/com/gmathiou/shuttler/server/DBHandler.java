@@ -47,6 +47,7 @@ public class DBHandler implements DBUpdateEventListener {
         try {
             PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `stops` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
+            DataHandler.getStops().clear();
             while (results.next()) {
                 int ID = results.getInt("id");
                 String shortName = results.getString("shortname");
@@ -70,6 +71,7 @@ public class DBHandler implements DBUpdateEventListener {
         try {
             PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `lines` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
+            DataHandler.getLines().clear();
             while (results.next()) {
                 int ID = results.getInt("id");
                 String name = results.getString("name");
@@ -89,7 +91,8 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = ?");
+            selectStatement.setString(1, email);
             ResultSet resultSet = selectStatement.executeQuery();
             int currentViews = 0;
             double currentKilometers = 0.0;
@@ -99,7 +102,10 @@ public class DBHandler implements DBUpdateEventListener {
             }
             int updatedViews = currentViews + views;
             double updatedKilometers = currentKilometers + kilometers;
-            PreparedStatement updateStatement = getDBconnection().prepareStatement("UPDATE `profiles` SET `views`=" + updatedViews + ",`kilometers`= " + updatedKilometers + " WHERE `email` = '" + email + "'");
+            PreparedStatement updateStatement = getDBconnection().prepareStatement("UPDATE `profiles` SET `views`= ? ,`kilometers`= ? WHERE `email` = ?");
+            updateStatement.setInt(1, updatedViews);
+            updateStatement.setDouble(2, updatedKilometers);
+            updateStatement.setString(3, email);
             updateStatement.execute();
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -113,7 +119,8 @@ public class DBHandler implements DBUpdateEventListener {
 
         JSONObject reply = new JSONObject();
         try {
-            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "' ORDER BY `views` DESC");
+            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = ? ORDER BY `views` DESC");
+            preparedStatement.setString(1, email);
             ResultSet results = preparedStatement.executeQuery();
             if (!results.isBeforeFirst()) {
                 reply.put("email", email);
@@ -144,10 +151,12 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = '" + email + "'");
+            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = ?");
+            selectStatement.setString(1, email);
             ResultSet results = selectStatement.executeQuery();
             if (!results.next()) {
-                PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES ('" + email + "',0,0)");
+                PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES (?,0,0)");
+                insertStatement.setString(1, email);
                 insertStatement.execute();
             }
         } catch (SQLException ex) {
