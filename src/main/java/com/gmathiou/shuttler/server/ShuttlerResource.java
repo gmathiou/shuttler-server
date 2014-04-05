@@ -40,12 +40,6 @@ public class ShuttlerResource {
         }
     }
 
-    protected synchronized void newUserRegistration(String email) {
-        for (Object listener : _DB_EventListeners) {
-            ((DBUpdateEventListener) listener).newUserRegistration(email);
-        }
-    }
-
     /**
      * Used to initialize the database handler and the event listeners
      */
@@ -73,9 +67,6 @@ public class ShuttlerResource {
             //User is already onboard a bus
             return Response.serverError().build();
         }
-
-        //Check if user exists in the profile table in DB
-        this.newUserRegistration(email);
 
         boolean busFoundFlag = false;
 
@@ -158,6 +149,51 @@ public class ShuttlerResource {
         String reply = profile.toJSONString();
         if (reply != null) {
             return Response.ok().entity(reply).build();
+        } else {
+            return Response.serverError().build();
+        }
+    }
+
+    @POST
+    @Path("authenticate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response authenticate(String msg) {
+        dataInit();
+        if (msg == null) {
+            return Response.serverError().build();
+        }
+        JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
+        String email = objMsg.get("email").toString();
+        String password = objMsg.get("password").toString();
+        if (email == null || password == null) {
+            return Response.serverError().build();
+        }
+        JSONObject reply;
+        reply = DataHandler.getDbHandler().authenticateUser(email, password);
+        if (reply != null) {
+            return Response.ok().build();
+        } else {
+            return Response.serverError().build();
+        }
+    }
+
+    @POST
+    @Path("registration")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response registration(String msg) {
+        dataInit();
+        if (msg == null) {
+            return Response.serverError().build();
+        }
+        JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
+        String email = objMsg.get("email").toString();
+        String password = objMsg.get("password").toString();
+        if (email == null || password == null) {
+            return Response.serverError().build();
+        }
+        Boolean reply = DataHandler.getDbHandler().registerUser(email, password);
+        if (reply == true) {
+            return Response.ok().build();
         } else {
             return Response.serverError().build();
         }

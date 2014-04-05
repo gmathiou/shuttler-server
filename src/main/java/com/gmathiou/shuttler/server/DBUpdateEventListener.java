@@ -12,5 +12,4 @@ package com.gmathiou.shuttler.server;
  */
 public interface DBUpdateEventListener {
     void updateRouteSessionViews(String email, int views, double kilometers);
-    void newUserRegistration(String email);
 }

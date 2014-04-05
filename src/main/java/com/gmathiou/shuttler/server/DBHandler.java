@@ -32,7 +32,7 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", ""));
+            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
         } catch (SQLException e) {
             System.err.println("Connection to DB Failed!");
         }
@@ -144,24 +144,51 @@ public class DBHandler implements DBUpdateEventListener {
         return reply;
     }
 
-    @Override
-    public void newUserRegistration(String email) {
+    public JSONObject authenticateUser(String email, String pass) {
         if (getDBconnection() == null) {
-            return;
+            return null;
         }
+        JSONObject reply = new JSONObject();
 
+        PreparedStatement selectStatement;
         try {
-            PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = ?");
+            selectStatement = getDBconnection().prepareStatement("SELECT *  FROM `profiles` WHERE `email` = ? AND `password` = ?");
             selectStatement.setString(1, email);
-            ResultSet results = selectStatement.executeQuery();
-            if (!results.next()) {
-                PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `views`, `kilometers`) VALUES (?,0,0)");
-                insertStatement.setString(1, email);
-                insertStatement.execute();
+            selectStatement.setString(2, pass);
+            ResultSet resultSet = selectStatement.executeQuery();
+            if (resultSet.next()) {
+                reply.put("authentication", 1);
+            } else {
+                return null;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return reply;
+    }
+
+    public Boolean registerUser(String email, String pass) {
+        if (getDBconnection() == null) {
+            return null;
+        }
+        PreparedStatement selectStatement;
+        try {
+            selectStatement = getDBconnection().prepareStatement("SELECT *  FROM `profiles` WHERE `email` = ?");
+            selectStatement.setString(1, email);
+            ResultSet resultSet = selectStatement.executeQuery();
+            if (!resultSet.next()) {
+                PreparedStatement insertStatement = getDBconnection().prepareStatement("INSERT INTO `profiles`(`email`, `password`, `views`, `kilometers`) VALUES (?,?,0,0)");
+                insertStatement.setString(1, email);
+                insertStatement.setString(2, pass);
+                insertStatement.execute();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
     /**
