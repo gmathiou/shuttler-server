@@ -69,12 +69,45 @@ Called by user to indicate the boarding on the bus.
 
             {
                 "email":"myaccount@gmail.com",
+                "password":"SHA1",
                 "latitude":"48.885944",
                 "longitude":"2.2949",
                 "lineid":"1"
             }
 
 + Response 200
+
+# User authentication [/authenticate]
+Used to authenticate a user
+
+## Retrieve Message [POST]
++ Request POST (application/json)
+
+    + Body
+
+            {
+                "email":"myaccount@gmail.com",
+                "password":"SHA1"
+            }
+
++ Response 200
++ Response 500
+
+# User registration [/registration]
+Used to authenticate a user
+
+## Retrieve Message [POST]
++ Request POST (application/json)
+
+    + Body
+
+            {
+                "email":"myaccount@gmail.com",
+                "password":"SHA1"
+            }
+
++ Response 200
++ Response 500
 
 # Update location [/updatelocation]
 Updates the location of the user on the server.
@@ -102,6 +135,7 @@ Called by user to indicate the disembarkment from the bus.
 
             {
                 "email":"myaccount@gmail.com",
+                "password":"SHA1",
                 "kilometers":16.89
             }
 

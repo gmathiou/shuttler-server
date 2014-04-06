@@ -59,9 +59,15 @@ public class ShuttlerResource {
         dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
+        String password = objMsg.get("password").toString();
         double lat = Double.valueOf(objMsg.get("latitude").toString());
         double lon = Double.valueOf(objMsg.get("longitude").toString());
         int line = Integer.valueOf(objMsg.get("lineid").toString());
+
+        //Check if user is in the registered users list in DB
+        if (DataHandler.getDbHandler().authenticateUser(email, password) == false) {
+            return Response.serverError().build();
+        }
 
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             //User is already onboard a bus
@@ -168,9 +174,9 @@ public class ShuttlerResource {
         if (email == null || password == null) {
             return Response.serverError().build();
         }
-        JSONObject reply;
+        Boolean reply;
         reply = DataHandler.getDbHandler().authenticateUser(email, password);
-        if (reply != null) {
+        if (reply == true) {
             return Response.ok().build();
         } else {
             return Response.serverError().build();
@@ -245,7 +251,13 @@ public class ShuttlerResource {
         dataInit();
         JSONObject objMsg = (JSONObject) JSONValue.parse(msg);
         String email = objMsg.get("email").toString();
+        String password = objMsg.get("password").toString();
         double distanceTravelled = Double.valueOf(objMsg.get("kilometers").toString());
+
+        //Check if user is in the registered users list in DB
+        if (DataHandler.getDbHandler().authenticateUser(email, password) == false) {
+            return Response.serverError().build();
+        }
 
         if (DataHandler.getPassengerToBusMap().containsKey(email)) {
             Bus bus = DataHandler.getPassengerToBusMap().get(email);

@@ -3,16 +3,16 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 13, 2014 at 04:50 PM
+-- Generation Time: Apr 06, 2014 at 11:19 PM
 -- Server version: 5.5.29
 -- PHP Version: 5.4.10
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
 
 --
 -- Database: `shuttlerDB`
 --
+DROP DATABASE `shuttlerDB`;
 CREATE DATABASE `shuttlerDB` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `shuttlerDB`;
 
@@ -35,8 +35,8 @@ CREATE TABLE `lines` (
 --
 
 INSERT INTO `lines` (`id`, `name`, `stopID_sequence`) VALUES
-(1, 'Paris - INRIA', '1-2-3-4'),
-(2, 'Versailles - INRIA', '5-6-7-4');
+(1, 'Paris - INRIA', '1-2-3-7'),
+(2, 'Versailles - INRIA', '4-5-6-7');
 
 -- --------------------------------------------------------
 
@@ -47,17 +47,11 @@ INSERT INTO `lines` (`id`, `name`, `stopID_sequence`) VALUES
 CREATE TABLE `profiles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` text NOT NULL,
+  `password` varchar(42) NOT NULL,
   `views` double NOT NULL,
   `kilometers` double NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
-
---
--- Dumping data for table `profiles`
---
-
-INSERT INTO `profiles` (`id`, `email`, `views`, `kilometers`) VALUES
-(1, 'mathioudakis.giorgos@gmail.com', 23, 18.259999999999998);
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
 
 -- --------------------------------------------------------
 
@@ -84,7 +78,7 @@ INSERT INTO `stops` (`id`, `shortname`, `name`, `latitude`, `longitude`, `line`)
 (1, 'etoile', 'Place de l''Etoile', 48.873934, 2.2949, 1),
 (2, 'dauphine', 'Porte Dauphine', 48.87028, 2.274401, 1),
 (3, 'auteuil', 'Porte d''Auteuil', 48.848418, 2.257299, 1),
-(4, 'chantiers', 'Gare Versailles Chantiers', 48.796006, 2.136563, 2),
-(5, 'prefecture', 'Préfecture', 48.801695, 2.130398, 2),
-(6, 'rivedroit', 'Gare Versailles Rive-Droite', 48.809652, 2.133955, 2),
+(4, 'chantiers', 'Gare Versailles Chantiers', 48.797177, 2.135966, 2),
+(5, 'prefecture', 'Préfecture', 48.802427, 2.129969, 2),
+(6, 'rivedroit', 'Gare Versailles Rive-Droite', 48.809748, 2.134025, 2),
 (7, 'inria', 'Inria', 48.836741, 2.102541, 1);

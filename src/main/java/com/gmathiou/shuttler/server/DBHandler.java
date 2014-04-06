@@ -144,12 +144,10 @@ public class DBHandler implements DBUpdateEventListener {
         return reply;
     }
 
-    public JSONObject authenticateUser(String email, String pass) {
+    public Boolean authenticateUser(String email, String pass) {
         if (getDBconnection() == null) {
             return null;
         }
-        JSONObject reply = new JSONObject();
-
         PreparedStatement selectStatement;
         try {
             selectStatement = getDBconnection().prepareStatement("SELECT *  FROM `profiles` WHERE `email` = ? AND `password` = ?");
@@ -157,14 +155,14 @@ public class DBHandler implements DBUpdateEventListener {
             selectStatement.setString(2, pass);
             ResultSet resultSet = selectStatement.executeQuery();
             if (resultSet.next()) {
-                reply.put("authentication", 1);
+                return true;
             } else {
-                return null;
+                return false;
             }
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return reply;
+        return false;
     }
 
     public Boolean registerUser(String email, String pass) {
