@@ -1,11 +1,7 @@
 package com.gmathiou.shuttler.server;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.PreDestroy;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -281,15 +277,5 @@ public class ShuttlerResource {
             DataHandler.getPassengerToBusMap().remove(email);
         }
         return Response.ok().build();
-    }
-
-    @PreDestroy
-    public void predestroy() {
-        System.out.println("Destroying server app");
-        try {
-            DataHandler.getDbHandler().getDBconnection().close();
-        } catch (SQLException ex) {
-            Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 }

@@ -32,16 +32,30 @@ public class DBHandler implements DBUpdateEventListener {
         }
 
         try {
-            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
+            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", ""));
         } catch (SQLException e) {
-            System.err.println("Connection to DB Failed!");
+            System.err.println("Connection to DB Failed! " + e.getMessage());
         }
         return getDBconnection();
     }
 
+    private void resetConnection() {
+        System.out.println("-------- RESSETING MySQL JDBC Connection ------------");
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("MySQL JDBC Driver not found: " + e.getMessage());
+        }
+        try {
+            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
+        } catch (SQLException e) {
+            System.err.println("Connection to DB Failed! " + e.getMessage());
+        }
+    }
+
     private void loadStops() {
         if (getDBconnection() == null) {
-            return;
+            resetConnection();
         }
 
         try {
@@ -65,7 +79,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     private void loadLines() {
         if (getDBconnection() == null) {
-            return;
+            resetConnection();
         }
 
         try {
@@ -87,7 +101,7 @@ public class DBHandler implements DBUpdateEventListener {
     @Override
     public void updateRouteSessionViews(String email, int views, double kilometers) {
         if (getDBconnection() == null) {
-            return;
+            resetConnection();
         }
 
         try {
@@ -114,12 +128,13 @@ public class DBHandler implements DBUpdateEventListener {
 
     public JSONObject getUserStats(String email) {
         if (getDBconnection() == null) {
-            return null;
+            resetConnection();
         }
 
         JSONObject reply = new JSONObject();
         try {
-            PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `profiles` WHERE `email` = ? ORDER BY `views` DESC");
+            PreparedStatement preparedStatement;
+            preparedStatement = getDBconnection().prepareStatement("select id, email,views, kilometers,rank FROM (select *,@curRow := @curRow + 1 AS rank from profiles JOIN (SELECT @curRow := 0) r ORDER BY views DESC) AS s1 WHERE s1.email= ?");
             preparedStatement.setString(1, email);
             ResultSet results = preparedStatement.executeQuery();
             if (!results.isBeforeFirst()) {
@@ -130,13 +145,11 @@ public class DBHandler implements DBUpdateEventListener {
                 return reply;
             }
             while (results.next()) {
-                if (results.getString("email").equals(email)) {
-                    reply.put("email", results.getString("email"));
-                    reply.put("views", results.getInt("views"));
-                    reply.put("kilometers", results.getInt("kilometers"));
-                    reply.put("rank", results.getRow());
-                    return reply;
-                }
+                reply.put("email", results.getString("email"));
+                reply.put("views", results.getInt("views"));
+                reply.put("kilometers", results.getInt("kilometers"));
+                reply.put("rank", results.getInt("rank"));
+                return reply;
             }
         } catch (SQLException ex) {
             Logger.getLogger(ShuttlerResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -146,7 +159,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     public Boolean authenticateUser(String email, String pass) {
         if (getDBconnection() == null) {
-            return null;
+            resetConnection();
         }
         PreparedStatement selectStatement;
         try {
@@ -154,11 +167,7 @@ public class DBHandler implements DBUpdateEventListener {
             selectStatement.setString(1, email);
             selectStatement.setString(2, pass);
             ResultSet resultSet = selectStatement.executeQuery();
-            if (resultSet.next()) {
-                return true;
-            } else {
-                return false;
-            }
+            return resultSet.isBeforeFirst();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -167,7 +176,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     public Boolean registerUser(String email, String pass) {
         if (getDBconnection() == null) {
-            return null;
+            resetConnection();
         }
         PreparedStatement selectStatement;
         try {
