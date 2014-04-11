@@ -39,23 +39,9 @@ public class DBHandler implements DBUpdateEventListener {
         return getDBconnection();
     }
 
-    private void resetConnection() {
-        System.out.println("-------- RESSETING MySQL JDBC Connection ------------");
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            System.err.println("MySQL JDBC Driver not found: " + e.getMessage());
-        }
-        try {
-            setDBconnection(DriverManager.getConnection("jdbc:mysql://localhost:8889/shuttlerDB?useUnicode=true&characterEncoding=UTF-8", "root", "root"));
-        } catch (SQLException e) {
-            System.err.println("Connection to DB Failed! " + e.getMessage());
-        }
-    }
-
     private void loadStops() {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
 
         try {
@@ -79,7 +65,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     private void loadLines() {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
 
         try {
@@ -101,7 +87,7 @@ public class DBHandler implements DBUpdateEventListener {
     @Override
     public void updateRouteSessionViews(String email, int views, double kilometers) {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
 
         try {
@@ -128,7 +114,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     public JSONObject getUserStats(String email) {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
 
         JSONObject reply = new JSONObject();
@@ -159,7 +145,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     public Boolean authenticateUser(String email, String pass) {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
         PreparedStatement selectStatement;
         try {
@@ -176,7 +162,7 @@ public class DBHandler implements DBUpdateEventListener {
 
     public Boolean registerUser(String email, String pass) {
         if (getDBconnection() == null) {
-            resetConnection();
+            DBconnection = initializeDB();
         }
         PreparedStatement selectStatement;
         try {
