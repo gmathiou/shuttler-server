@@ -15,10 +15,10 @@ import org.json.simple.JSONObject;
  */
 public class DBHandler implements DBUpdateEventListener {
 
-    private Connection DBconnection = null;
+    private Connection _DBconnection = null;
 
     public DBHandler() {
-        DBconnection = initializeDB();
+        _DBconnection = initializeDB();
         loadLines();
         loadStops();
     }
@@ -40,11 +40,11 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     private void loadStops() {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
             PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `stops` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
             DataHandler.getStops().clear();
@@ -64,11 +64,11 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     private void loadLines() {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
             PreparedStatement preparedStatement = getDBconnection().prepareStatement("SELECT * FROM `lines` WHERE 1");
             ResultSet results = preparedStatement.executeQuery();
             DataHandler.getLines().clear();
@@ -86,11 +86,11 @@ public class DBHandler implements DBUpdateEventListener {
 
     @Override
     public void updateRouteSessionViews(String email, int views, double kilometers) {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
             PreparedStatement selectStatement = getDBconnection().prepareStatement("SELECT `views`,`kilometers`  FROM `profiles` WHERE `email` = ?");
             selectStatement.setString(1, email);
             ResultSet resultSet = selectStatement.executeQuery();
@@ -113,14 +113,14 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     public JSONObject getUserStats(String email) {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-
         JSONObject reply = new JSONObject();
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
             PreparedStatement preparedStatement;
-            preparedStatement = getDBconnection().prepareStatement("select id, email,views, kilometers,rank FROM (select *,@curRow := @curRow + 1 AS rank from profiles JOIN (SELECT @curRow := 0) r ORDER BY views DESC) AS s1 WHERE s1.email= ?");
+            preparedStatement = getDBconnection().prepareStatement("SELECT id, email,views, kilometers,rank FROM (select *,@curRow := @curRow + 1 AS rank from profiles JOIN (SELECT @curRow := 0) r ORDER BY views DESC) AS s1 WHERE s1.email= ?");
             preparedStatement.setString(1, email);
             ResultSet results = preparedStatement.executeQuery();
             if (!results.isBeforeFirst()) {
@@ -144,11 +144,12 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     public Boolean authenticateUser(String email, String pass) {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-        PreparedStatement selectStatement;
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
+            PreparedStatement selectStatement;
             selectStatement = getDBconnection().prepareStatement("SELECT *  FROM `profiles` WHERE `email` = ? AND `password` = ?");
             selectStatement.setString(1, email);
             selectStatement.setString(2, pass);
@@ -161,11 +162,12 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     public Boolean registerUser(String email, String pass) {
-        if (getDBconnection() == null) {
-            DBconnection = initializeDB();
-        }
-        PreparedStatement selectStatement;
         try {
+            if (_DBconnection == null || _DBconnection.isValid(5) == false) {
+                _DBconnection = initializeDB();
+            }
+
+            PreparedStatement selectStatement;
             selectStatement = getDBconnection().prepareStatement("SELECT *  FROM `profiles` WHERE `email` = ?");
             selectStatement.setString(1, email);
             ResultSet resultSet = selectStatement.executeQuery();
@@ -185,16 +187,16 @@ public class DBHandler implements DBUpdateEventListener {
     }
 
     /**
-     * @return the DBconnection
+     * @return the _DBconnection
      */
     public Connection getDBconnection() {
-        return DBconnection;
+        return _DBconnection;
     }
 
     /**
-     * @param DBconnection the DBconnection to set
+     * @param DBconnection the _DBconnection to set
      */
     public void setDBconnection(Connection DBconnection) {
-        this.DBconnection = DBconnection;
+        this._DBconnection = DBconnection;
     }
 }

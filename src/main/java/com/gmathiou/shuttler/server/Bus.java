@@ -6,6 +6,7 @@
 package com.gmathiou.shuttler.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  *
@@ -18,6 +19,7 @@ public class Bus {
     private double _lon;
     private ArrayList<String> passengers;
     private int _lastSeenStopID;
+    private Date _startTime;
 
     /**
      * @return the _line
@@ -75,21 +77,22 @@ public class Bus {
         this.passengers = passengers;
     }
 
-    public Bus(double lat, double lon, Line line) {
+    public Bus(double lat, double lon, Line line, Date startTime) {
         this._lat = lat;
         this._lon = lon;
         this._line = line;
+        this._startTime = startTime;
         passengers = new ArrayList<String>();
     }
 
-    public void hopOn(double lat, double lon, String email) {
-        this._lat = lat;
-        this._lon = lon;
-        passengers = new ArrayList<String>();
-        if (!passengers.contains(email)) {
-            passengers.add(email);
-        }
-    }
+//    public void hopOn(double lat, double lon, String email) {
+//        this._lat = lat;
+//        this._lon = lon;
+//        passengers = new ArrayList<String>();
+//        if (!passengers.contains(email)) {
+//            passengers.add(email);
+//        }
+//    }
 
     public void updateLocation(double lat, double lon, int lastSeenStopID) {
         setLat(lat);
@@ -109,5 +112,19 @@ public class Bus {
      */
     public void setLastSeenStopID(int _lastSeenStopID) {
         this._lastSeenStopID = _lastSeenStopID;
+    }
+
+    /**
+     * @return the _startTime
+     */
+    public Date getStartTime() {
+        return _startTime;
+    }
+
+    /**
+     * @param _startTime the _startTime to set
+     */
+    public void setStartTime(Date _startTime) {
+        this._startTime = _startTime;
     }
 }

@@ -1,6 +1,7 @@
 package com.gmathiou.shuttler.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -60,6 +61,14 @@ public class ShuttlerResource {
         double lon = Double.valueOf(objMsg.get("longitude").toString());
         int line = Integer.valueOf(objMsg.get("lineid").toString());
 
+        //Check if user is far away from Paris
+        double ParisCenterLat = 48.856614;
+        double ParisCenterLon = 2.352222;
+        double distanceFromParis = LocationHelpers.distFrom(lat, lon, ParisCenterLat, ParisCenterLon);
+        if (distanceFromParis > 100000) {
+            return Response.serverError().build();
+        }
+
         //Check if user is in the registered users list in DB
         if (DataHandler.getDbHandler().authenticateUser(email, password) == false) {
             return Response.serverError().build();
@@ -73,12 +82,11 @@ public class ShuttlerResource {
         boolean busFoundFlag = false;
 
         //Some buses exist. Check if the current passenger is onboard a bus that is alredy there
-        for (int i = 0; i < DataHandler.getBuses().size(); i++) {
-            Bus bus = DataHandler.getBuses().get(i);
-            if (LocationHelpers.distFrom(lat, lon, bus.getLat(), bus.getLon()) < 0.2) {
+        for (Bus bus : DataHandler.getBuses()) {
+            if (LocationHelpers.distFrom(lat, lon, bus.getLat(), bus.getLon()) < 40) {
                 //Bus already registered. Just add a passenger
                 bus.getPassengers().add(email);
-                DataHandler.getPassengerToBusMap().put(email, DataHandler.getBuses().get(i));
+                DataHandler.getPassengerToBusMap().put(email, bus);
                 busFoundFlag = true;
                 break;
             }
@@ -98,7 +106,8 @@ public class ShuttlerResource {
 
         //Check if there are any buses registered
         if (DataHandler.getBuses().size() < 1 || busFoundFlag == false) {
-            Bus newBus = new Bus(lat, lon, newLine);
+            Date now = new Date();
+            Bus newBus = new Bus(lat, lon, newLine, now);
             DataHandler.getBuses().add(newBus);
             newBus.getPassengers().add(email);
             DataHandler.getPassengerToBusMap().put(email, newBus);
@@ -214,6 +223,17 @@ public class ShuttlerResource {
             if (DataHandler.getBuses().size() > 0) {
                 for (Bus b : DataHandler.getBuses()) {
                     if (b.getLine().getID() == line) {
+
+                        //Calculate the interval between the start of the bus and now
+                        Date now = new Date();
+                        double intervalMil = now.getTime() - b.getStartTime().getTime();
+                        double hours = intervalMil / (double) 3600000;
+
+                        //Check for inactive buses
+                        if (hours > 3) {
+                            DataHandler.getBuses().remove(b);
+                            continue;
+                        }
 
                         // Update the views Map
                         for (String passenger : b.getPassengers()) {
