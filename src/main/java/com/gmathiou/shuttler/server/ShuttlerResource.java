@@ -1,7 +1,9 @@
 package com.gmathiou.shuttler.server;
 
+import static com.gmathiou.shuttler.server.DataHandler.getPassengerViewsMap;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -87,6 +89,9 @@ public class ShuttlerResource {
                 //Bus already registered. Just add a passenger
                 bus.getPassengers().add(email);
                 DataHandler.getPassengerToBusMap().put(email, bus);
+                if(!getPassengerViewsMap().containsKey(email)){
+                    getPassengerViewsMap().put(email, new HashSet<String>());
+                }
                 busFoundFlag = true;
                 break;
             }
@@ -111,6 +116,9 @@ public class ShuttlerResource {
             DataHandler.getBuses().add(newBus);
             newBus.getPassengers().add(email);
             DataHandler.getPassengerToBusMap().put(email, newBus);
+            if(!getPassengerViewsMap().containsKey(email)){
+                getPassengerViewsMap().put(email, new HashSet<String>());
+            }
         }
         return Response.ok().build();
     }
